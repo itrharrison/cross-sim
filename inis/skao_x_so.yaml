@@ -1,0 +1,145 @@
+likelihood:
+  soliket.cross_correlation.ShearKappaLikelihood:
+    datapath: ./data/gs_skao-ck_so.sim.sacc.fits
+    use_tracers: all
+output: chains/skao_x_so
+params:
+  A_IA:
+    latex: A_{IA}
+    prior:
+      dist: norm
+      loc: 0.35
+      scale: 0.65
+    proposal: 0.5
+    ref: 0.35
+  As:
+    value: 'lambda logA: 1e-10*np.exp(logA)'
+  H0:
+    value: 67.7
+  b1:
+    value: 1.0
+  eta_IA:
+    latex: \eta_{IA}
+    prior:
+      dist: norm
+      loc: 1.66
+      scale: 4.0
+    proposal: 3.0
+    ref: 1.66
+  gs_des_bin1_deltaz:
+    latex: \Delta z_{1}
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 0.03
+    proposal: 0.03
+    ref: 0.0
+  gs_des_bin1_m:
+    latex: m_{1}
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 0.02
+    proposal: 0.02
+    ref: 0.0
+  gs_des_bin2_deltaz:
+    latex: \Delta z_{2}
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 0.03
+    proposal: 0.03
+    ref: 0.0
+  gs_des_bin2_m:
+    latex: m_{2}
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 0.02
+    proposal: 0.02
+    ref: 0.0
+  gs_des_bin3_deltaz:
+    latex: \Delta z_{3}
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 0.03
+    proposal: 0.03
+    ref: 0.0
+  gs_des_bin3_m:
+    latex: m_{3}
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 0.02
+    proposal: 0.02
+    ref: 0.0
+  gs_des_bin4_deltaz:
+    latex: \Delta z_{4}
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 0.03
+    proposal: 0.03
+    ref: 0.0
+  gs_des_bin4_m:
+    latex: m_{4}
+    prior:
+      dist: norm
+      loc: 0.0
+      scale: 0.02
+    proposal: 0.02
+    ref: 0.0
+  logA:
+    drop: true
+    latex: \log(10^{10} A_\mathrm{s})
+    prior:
+      max: 4.0
+      min: 1.6
+    proposal: 0.001
+    ref:
+      dist: norm
+      loc: 3.05
+      scale: 0.001
+  mnu:
+    value: 0.06
+  ombh2:
+    value: 0.0245
+  omch2:
+    value: 'lambda omegam, ombh2, mnu, H0: (omegam*(H0/100)**2-ombh2)-(mnu*(3.046/3)**0.75)/94.0708'
+  omegam:
+    drop: true
+    latex: \Omega_\mathrm{m}
+    prior:
+      max: 0.9
+      min: 0.1
+    proposal: 0.2
+    ref:
+      dist: norm
+      loc: 0.3
+      scale: 0.2
+  sigma8:
+    latex: \sigma_8
+sampler:
+  # evaluate: null
+  mcmc:
+    Rminus1_cl_stop: 0.2
+    Rminus1_stop: 0.01
+    covmat: chains/test_noproposal.covmat
+    drag: false
+    max_tries: 10000
+    oversample_power: 0.4
+    proposal_scale: 1.9
+theory:
+  camb:
+    extra_args:
+      bbn_predictor: PArthENoPE_880.2_standard.dat
+      halofit_version: mead2016
+      nnu: 3.046
+      num_massive_neutrinos: 1
+      theta_H0_range:
+      - 40
+      - 100
+  soliket.ccl.CCL:
+    nonlinear: false
+# timing: true
