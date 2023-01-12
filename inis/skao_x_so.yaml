@@ -97,10 +97,10 @@ params:
       max: 4.0
       min: 1.6
     proposal: 0.001
-    ref: 3.05
-      # dist: norm
-      # loc: 3.05
-      # scale: 0.001
+    ref:
+      dist: norm
+      loc: 3.05
+      scale: 0.001
   mnu:
     value: 0.06
   ombh2:
@@ -114,22 +114,22 @@ params:
       max: 0.9
       min: 0.1
     proposal: 0.2
-    ref: 0.3
-      # dist: norm
-      # loc: 0.3
-      # scale: 0.2
+    ref:
+      dist: norm
+      loc: 0.3
+      scale: 0.2
   sigma8:
     latex: \sigma_8
 sampler:
-  evaluate: null
-  # mcmc:
-  #   Rminus1_cl_stop: 0.2
-  #   Rminus1_stop: 0.01
-  #   covmat: chains/test_noproposal.covmat
-  #   drag: false
-  #   max_tries: 10000
-  #   oversample_power: 0.4
-  #   proposal_scale: 1.9
+  # evaluate: null
+  mcmc:
+    Rminus1_cl_stop: 0.2
+    Rminus1_stop: 0.01
+    covmat: chains/test_noproposal.covmat
+    drag: false
+    max_tries: 10000
+    oversample_power: 0.4
+    proposal_scale: 1.9
 theory:
   camb:
     extra_args:
@@ -142,4 +142,4 @@ theory:
       - 100
   soliket.ccl.CCL:
     nonlinear: false
-timing: true
+# timing: true
