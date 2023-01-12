@@ -23,26 +23,28 @@ def setup_gamma_tracers(cosmo, dndz, A_IA):
 def calculate_cl(cosmo, galaxy_tracers, cmb_tracer, dndz, ngal, sigma_e, binning):
    
     n_maps = len(galaxy_tracers) + 1
+
+    w_bins = binning['Well'].weight.T
     
     cls = np.zeros([n_maps, n_maps, binning['n_ell']])
 
-    cls[0, 0, :] = ccl.angular_cl(cosmo, cmb_tracer, cmb_tracer, binning['ells']) + Nell_so_k_binned
+    cls[0, 0, :] = np.dot(w_bins, ccl.angular_cl(cosmo, cmb_tracer, cmb_tracer, binning['ells_theory'] + Nell_so_k_binned))
 
     for ibin in np.arange(1,dndz.shape[-1]):
 
         # Nell_gals_bin = np.ones(binning['n_ell']) / (ngal[ibin-1].value * (60 * 180 / np.pi)**2)
-        Nell_gamma_bin = np.ones(binning['n_ell']) * sigma_e[ibin - 1]**2. / (ngal[ ibin - 1] * (60 * 180 / np.pi)**2)
+        Nell_gamma_bin = np.ones(len(binning['ells_theory'])) * sigma_e[ibin - 1]**2. / (ngal[ ibin - 1] * (60 * 180 / np.pi)**2)
 
-        cls[0, ibin, :] = ccl.angular_cl(cosmo, galaxy_tracers[ibin-1], cmb_tracer, binning['ells'])
+        cls[0, ibin, :] = np.dot(w_bins, ccl.angular_cl(cosmo, galaxy_tracers[ibin-1], cmb_tracer, binning['ells_theory']))
         cls[ibin, 0, :] = cls[0, ibin, :]
 
         for jbin in np.arange(1,dndz.shape[-1]):
             if ibin==jbin:
-                cls[ibin, ibin, :] = ccl.angular_cl(cosmo, galaxy_tracers[ibin-1], galaxy_tracers[ibin-1], binning['ells']) + Nell_gamma_bin
+                cls[ibin, ibin, :] = np.dot(w_bins, ccl.angular_cl(cosmo, galaxy_tracers[ibin-1], galaxy_tracers[ibin-1], binning['ells_theory']) + Nell_gamma_bin)
             else:
-                cls[ibin, jbin, :] = ccl.angular_cl(cosmo, galaxy_tracers[ibin-1], galaxy_tracers[jbin-1], binning['ells'])
-                cls[jbin, ibin, :] = ccl.angular_cl(cosmo, galaxy_tracers[jbin-1], galaxy_tracers[ibin-1], binning['ells'])
-                
+                cls[ibin, jbin, :] = np.dot(w_bins, ccl.angular_cl(cosmo, galaxy_tracers[ibin-1], galaxy_tracers[jbin-1], binning['ells_theory']))
+                cls[jbin, ibin, :] = np.dot(w_bins, ccl.angular_cl(cosmo, galaxy_tracers[jbin-1], galaxy_tracers[ibin-1], binning['ells_theory']))
+
     return cls
 
 def calculate_knox_covariance(cls, binning, fsky):
@@ -78,8 +80,7 @@ cosmo = ccl.Cosmology(Omega_c=0.25,
                       n_s=0.965,
                       A_s=2.11e-9,
                       Omega_k=0.0,
-                      Neff=3.046,
-                      matter_power_spectrum='linear')
+                      Neff=3.046)
 
 ell_min = 100
 ell_max = 1000
@@ -99,7 +100,9 @@ Well = sacc.BandpowerWindow(ells_win, wins.T)
 binning = {'ell_max': ell_max,
            'n_ell': n_ell,
            'delta_ell': delta_ell,
-           'ells': ells}
+           'ells_theory': ells_win,
+           'ells': ells,
+           'Well': Well}
 
 dndz_skao = np.loadtxt('./data/nz_skao_med_deep.txt')
 
@@ -125,8 +128,8 @@ Nell_so = np.loadtxt('./data/nlkk_v3_1_0deproj0_SENS1_fsky0p4_it_lT30-3000_lP30-
 ell_soNell, Nell_so_k = Nell_so[:,0], Nell_so[:,7]
 
 # Bin Nells to the same as data
-bindx = np.digitize(ell_soNell, ells, right=True)
-Nell_so_k_binned = [np.mean(Nell_so_k[bindx == i]) for i in range(0, len(ells))]
+bindx = np.digitize(ell_soNell, ells_win, right=True)
+Nell_so_k_binned = [np.mean(Nell_so_k[bindx == i]) for i in range(0, len(ells_win))]
 
 skao_tracers = setup_gamma_tracers(cosmo, dndz_skao, A_IA=None)
 
@@ -178,3 +181,16 @@ s.remove_selection(data_type='cmb_convergence_cl')
 s.remove_selection(data_type='galaxy_shear_cl_ee')
 
 s.save_fits('./data/gs_skao-ck_so.sim.sacc.fits', overwrite=True)
+
+from matplotlib import pyplot as plt
+
+plt.figure()
+for t1, t2 in s.get_tracer_combinations():
+    l, cl, cov = s.get_ell_cl(None, t1, t2, return_cov=True)
+    err = np.sqrt(np.diag(cov))
+    plt.errorbar(l, cl, err, label='%s - %s' % (t1, t2))
+plt.loglog()
+plt.legend(ncol=2)
+plt.xlabel(r'$\ell$',fontsize=16)
+plt.ylabel(r'$C_\ell$',fontsize=16)
+plt.savefig('./plots/skao_x_so.png', dpi=300, bbox_inches='tight')
